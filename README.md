@@ -62,7 +62,7 @@ httpx is a fast and multi-purpose HTTP toolkit allow to run multiple probers usi
 httpx requires **go1.17** to install successfully. Run the following command to get the repo - 
 
 ```sh
-go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
+go install -v github.com/sahruldotid/httpx/cmd/httpx@latest
 ```
 
 # Usage
@@ -126,6 +126,7 @@ MISCELLANEOUS:
    -p, -ports string[]  Port to scan (nmap syntax: eg 1,2-10,11)
    -path string         File or comma separated paths to request
    -paths string        File or comma separated paths to request (deprecated)
+   -dns4j string		Perform Log4j scan using given dns string, eg randomstring.interact.sh.
 
 OUTPUT:
    -o, -output string                File to write output
