@@ -197,6 +197,7 @@ type Options struct {
 	SkipDedupe                bool
 	ProbeAllIPS               bool
 	DNS4J				  	  string
+	CustomDNS4J				  string
 }
 
 // ParseOptions parses the command line options for application
@@ -259,6 +260,7 @@ func ParseOptions() *Options {
 		flagSet.StringVar(&options.RequestURIs, "path", "", "File or comma separated paths to request"),
 		flagSet.StringVar(&options.RequestURIs, "paths", "", "File or comma separated paths to request (deprecated)"),
 		flagSet.StringVar(&options.DNS4J, "dns4j", "", "DNS address to log log4j exploit"),
+
 	)
 
 	createGroup(flagSet, "output", "Output",

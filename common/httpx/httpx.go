@@ -317,21 +317,6 @@ func (h *HTTPX) NewRequestWithContext(ctx context.Context, method, targetURL str
 	return
 }
 
-func (h *HTTPX) NewRequestLog4j(ctx context.Context, method, targetURL string) (req *retryablehttp.Request, err error) {
-	req, err = retryablehttp.NewRequestWithContext(ctx, method, targetURL, nil)
-	if err != nil {
-		return
-	}
-
-	// Skip if unsafe is used
-	if !h.Options.Unsafe {
-		// set default user agent
-		req.Header.Set("User-Agent", h.Options.DefaultUserAgent)
-		// set default encoding to accept utf8
-		req.Header.Add("Accept-Charset", "utf-8")
-	}
-	return
-}
 
 // SetCustomHeaders on the provided request
 func (h *HTTPX) SetCustomHeaders(r *retryablehttp.Request, headers map[string]string) {
